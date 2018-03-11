@@ -1,0 +1,6 @@
+,Protein(lb),Carbohydrates(lb),Roughage(lb), Cost 
+Hay(per bale),0.5,2,5, $1.80 
+Oats(per sack),1,4,2, $3.50 
+Feeding Blocks(per block),2,0.5,1, $0.40 
+High Protein Concentrate(per sack),6,1,2.5, $1.00 
+Requirements per horse(per week),40,20,45,
