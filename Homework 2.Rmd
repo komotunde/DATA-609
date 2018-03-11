@@ -1,0 +1,126 @@
+---
+title: "DATA 609 HW 3"
+author: "Oluwakemi Omotunde"
+date: "February 22, 2018"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Page 113 # 2
+
+The following table gives the elongation(e) in inches per inch(in./in/) for a given stress(S) on a steel wire measure in pounds per square inch(lb/in^2). Test the model e = c1*S by plotting the data. Estimate c1 graphically. 
+
+```{r df}
+S <- c(5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100)
+e <- c(0, 19, 57, 94, 134, 173, 216, 256, 297, 343, 390)
+
+df <- data.frame(S, e)
+
+#plot(df)
+
+library(ggplot2)
+ggplot(df, aes(x = S, y = e)) + labs(title = "Elongation and Stress") + geom_point()
+```
+
+I would estimate c1 to be about 4. 
+
+Page 127 #10
+
+Fit the data with the models given, using least squares.
+
+```{r df2}
+b <- c("Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune")
+p <- c(7.60e6, 1.94e7, 3.16e7, 5.94e7, 3.74e8, 9.35e8, 2.64e9, 5.22e9)
+d <- c(5.579e10, 1.08e11, 1.5e11, 2.28e11, 7.79e11, 1.43e12, 2.87e12, 4.5e12)
+df_2 <- data.frame(b,p,d)
+df_2
+```
+
+We are trying to fit to model y = ax^(3/2). We will solve for a first.
+
+```{r solve a}
+n <- sum(df_2$p^(3/2) * df_2$d)
+den <- sum(df_2$p^3)
+
+a <- n/den
+a
+```
+From above, our least squares model is: y = .013x^3/2. Lastly, lets go ahead and plot the actual points and the calculated points.
+
+```{r plot}
+ggplot(df_2, aes(x = p, y = d)) +geom_point() + geom_line(aes(x = p, y = (a * p^(3/2))), color ="red")
+```
+Page 221 #2
+
+Use a smooth polynoial to fit the data in Table 5.18 to obtain arrivals and unloading times. Compare results to those in Table 5.19 and 5.20.
+
+```{r table arrival}
+arr.lb <- 0:12
+arr.lb <- arr.lb * 10 +15
+
+arr.ub <- arr.lb + 9
+arr.ub[length(arr.ub)] <- 145
+
+arr.mid <- (arr.ub + arr.lb)/2
+arr.occr <- c(11, 35, 42, 61, 108, 193, 240, 207, 150, 85, 44, 21, 3)
+```
+
+```{r table unloading}
+unload.lb <- 0:8
+unload.lb <- unload.lb * 5 + 45
+
+unload.ub <- unload.lb + 4
+unload.ub[length(unload.ub)] <- 90
+
+unload.mid <- (unload.lb + unload.ub)/ 2
+unload.occr <- c(20, 54, 114, 103, 156, 223, 250, 171, 109)
+```
+
+```{r probability}
+arr.prob <- arr.occr / sum(arr.occr)
+cumprob_arr <- cumsum(arr.prob)
+
+unload.prob <- unload.occr / sum(unload.occr)
+cumprob_unload <- cumsum(unload.prob)
+```
+
+```{r linear models}
+lmod.arr <- approxfun(cumprob_arr, arr.mid, method = "linear")
+lmod.unload <- approxfun(cumprob_unload, unload.mid, method = "linear")
+```
+
+```{r plot arrival}
+plot(cumprob_arr, arr.mid)
+points(cumprob_arr, lmod.arr(cumprob_arr), type = "l")
+```
+
+```{r plot unload}
+plot(cumprob_unload, unload.mid)
+points(cumprob_unload, lmod.unload(cumprob_unload), type = "l")
+```
+```{r compare arrival}
+arr.lm <- lm(arr.mid ~ poly(cumprob_arr, 3))
+unload.lm <- lm(unload.mid ~ poly(cumprob_unload, 3))
+plot(cumprob_arr, arr.mid)
+points(cumprob_arr, lmod.arr(cumprob_arr), type = "l")
+
+df_3 <- data.frame(cumprob_arr = seq(from = 0, to = 1, by = .01))
+y <- predict(arr.lm, newdata = df_3)
+points(df_3$cumprob_arr, y, type = "l", col = "blue")
+```
+
+```{r compare unloading}
+plot(cumprob_unload, unload.mid)
+points(cumprob_unload, lmod.unload(cumprob_unload), type = "l")
+
+df_4 <- data.frame(cumprob_unload = seq(from = 0, to = 1, by = .01))
+y <- predict(unload.lm, newdata = df_4)
+points(df_4$cumprob_unload, y, type = "l", col = "blue")
+```
+
+It seems as though both models are good reps of the data. 

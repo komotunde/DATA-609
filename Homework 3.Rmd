@@ -1,0 +1,154 @@
+---
+title: "DATA 609 Homework 3"
+author: "Oluwakemi Omotunde"
+date: "March 7, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Page 228 #1
+
+1. Consider a model for the long-term dining behavior of the students at College USA. It is found that 25% of the students who eat at the college's Grease Dining Hall return to eat there again, whereas those who eat at Sweet Dining Hall have a 93% return rate. These are the only two dining halls available on campus and assume that all students eat at one of these halls. Formulate a model to solve for the long-term percentage of students eating at each hall.
+
+```{r model}
+require(knitr)
+dine <- data.frame(n = 0, GDH = 1, SDH = 0)
+n <- 20
+for(i in 1:n){
+  dine <- rbind(dine, c(i, tail(dine$GDH, 1) * .25 + tail(dine$SDH, 1) * .07, tail(dine$GDH, 1) * .75 + tail(dine$SDH, 1) * .93))
+}
+
+kable(dine)
+```
+
+After the 9th iteration, our values level out. I'd like to plot this.
+
+```{r plot}
+require(ggplot2)
+x <- dine$n
+y <- dine$SDH
+y.1 <- dine$GDH
+
+ggplot(dine, aes(x)) + geom_line(aes(y = y), colour = "red") + geom_line(aes(y = y.1), colour = "blue")
+```
+
+
+Page 240 #1
+
+Use the basic linear model y = ax +b to fit the following data sets. Provide the model, provide the values of SSE, SSR, SST, and R^2, and provide a residual plot. 
+
+For table 2.7, predict weight as a function of height.
+
+```{r }
+height <- 60:80
+weight <- c(132, 136, 141, 145, 150, 155, 160, 165, 170, 175, 180, 185, 190, 195, 201, 206, 212, 218, 223, 229, 234)
+
+w.h <- data.frame(height, weight)
+head(w.h)
+```
+
+I'm going to attempt to calculate the slope and intercept using the formulas in the textbook.
+
+$$a = (m\sum x_iy_i - \sum x_i \sum y_i)/ m\sum x^2_i - (\sum x_i)^2$$
+$$b = (m\sum x_i^2y_i - \sum x_i y_i \sum x_i)/ m\sum x^2_i - (\sum x_i)^2$$
+
+```{r slope and intercept}
+m <- length(height) #total data points we are working with, in this case 21
+
+a <- (m*sum(height * weight) - sum(height) * sum(weight))/(m*sum(height^2) - (sum(height)^2))
+
+b <- (sum(height^2)*sum(weight) - sum(height * weight)*sum(height))/(m*sum(height^2) - (sum(height)^2))
+
+sprintf("Our slope is %s", a)
+sprintf("The intercept is %s", b)
+```
+Now that we have our slope and intercept, we can generate our equation:
+$$y = 5.14x - 178.50$$
+Now that we have our model, we can now work on calculating our SSE (error sum of squares).
+
+```{r SSE}
+SSE <- sum((weight - (a*height + b))^2)
+
+sprintf("The error sum of squares is %s", SSE)
+```
+
+I will now calculate our SST (total corrected sum of squares) value.
+
+```{r SST}
+SST <- sum((weight - mean(weight))^2)
+
+sprintf("The total corrected sum of squares is %s", SST)
+```
+
+Next is our SSR (regression sum of squares) value.
+
+```{r SSR}
+SSR <- SST - SSE
+
+sprintf("The regression sum of squares is %s", SSR)
+```
+
+Now we can calculate our $$R^2$$ value. 
+
+```{r R square}
+r.squared <- 1 - (SSE/SST)
+
+sprintf("The R^2 value is %s", r.squared)
+```
+
+This is a great $$R^2$$ value. It means that almost 100% of the y values are accounted for with the linear relationship with the x values. Our last step is to plot the residuals. 
+
+```{r plot}
+lmod <- lm(weight ~ height)
+lmod
+
+#This is also just a quick check that our values from above are correct. 
+par(mfrow = c(2, 2))
+plot(lmod)
+```
+
+Page 240 #2
+
+For Table 2.7, predict weight as a function of the cube of height. 
+
+From my understanding, our first step is to covert our current heights to height cubed. Once we do this, we can follow the same steps from above. 
+
+```{r slope and intercept 2}
+h.cube <- height^3
+
+a.cube <- (m*sum(h.cube * weight) - sum(h.cube) * sum(weight))/(m*sum(h.cube^2) - (sum(h.cube)^2))
+
+b.cube <- (sum(h.cube^2)*sum(weight) - sum(h.cube * weight)*sum(h.cube))/(m*sum(h.cube^2) - (sum(h.cube)^2))
+
+sprintf("Our slope is %s", a.cube)
+sprintf("The intercept is %s", b.cube)
+```
+Our equation is: 
+
+$$y = .00035x + 59.46$$
+
+Now that we have our equation, we will find our SSE, SST, SSR and $$R^2$$ values. 
+
+```{r sse, sst, ssr, r}
+SSE.cube <- sum((weight - (a.cube*h.cube + b.cube))^2)
+SST.cube <- sum((weight - mean(weight))^2)
+SSR.cube <- SST.cube - SSE.cube
+rsqrd.cube <- 1 - (SSE.cube/SST.cube)
+
+sprintf("The error sum of squares is %s", SSE.cube)
+sprintf("The total corrected sum of squares is %s", SST.cube)
+sprintf("The regression sum of squares is %s", SSR.cube)
+sprintf("The R^2 value is %s", rsqrd.cube)
+```
+
+```{r plot cubed}
+lmod.cube <- lm(weight ~ h.cube)
+lmod.cube
+
+par(mfrow = c(2, 2))
+plot(lmod.cube)
+```
+
